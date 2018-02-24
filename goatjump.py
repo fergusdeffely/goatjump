@@ -33,76 +33,84 @@ def main():
  
     processing = "Nothing"
 
-    # indicator states: clear, power, direction, cleanup
-    indicator = sprites.Indicator()
+    player_sprite = sprites.Indicator()
     
-    
+    # left, top, width, height
+    surfaces = [[50, 450, 600, 30]]
+
+   
     # -------- Main Program Loop -----------
     while not done:
-        # ALL EVENT PROCESSING SHOULD GO BELOW THIS COMMENT
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                done = True
-                
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    # handle left 
-                    processing = "K_LEFT => DOWN"
-                    
-                elif event.key == pygame.K_RIGHT:
-                    # handle right 
-                    processing = "K_RIGHT => DOWN"
-                    
-                elif event.key == pygame.K_UP:
-                    # handle up 
-                    processing = "K_UP => DOWN"
-                    
-                elif event.key == pygame.K_DOWN:
-                    # handle down
-                    processing = "K_DOWN => DOWN"
-                    
-                elif event.key == pygame.K_SPACE:
-                    processing = "K_SPACE => DOWN"
-                    indicator.do_actionkey_down()
-                    
-            elif event.type == pygame.KEYUP:
-                if event.key == pygame.K_LEFT:
-                    # handle left 
-                    processing = "K_LEFT => UP"
-                elif event.key == pygame.K_RIGHT:
-                    # handle right 
-                    processing = "K_RIGHT => UP"
-                elif event.key == pygame.K_UP:
-                    # handle up 
-                    processing = "K_UP => UP"
-                elif event.key == pygame.K_DOWN:
-                    # handle down
-                    processing = "K_DOWN => UP"
-                #elif event.key == pygame.K_SPACE:
-                    #do_spacekey_up()
-
-                
+        
         # Event Processing
- 
+        done = process_events(player_sprite)
+                
         # Game Logic
-        indicator.update()
+        player_sprite.update(surfaces)
             
         # Drawing
         screen.fill(WHITE)
 
-        indicator.render(screen)
+        player_sprite.render(screen)
+        
+        # render surfaces
+        for surface in surfaces:
+            pygame.draw.rect(screen, GREEN, surface)
          
         # Go ahead and update the screen with what we've drawn.
         pygame.display.flip()
  
         # Limit to 60 frames per second
-        clock.tick(60)
+        clock.tick(4)
         
  
     # Close the window and quit.
     # If you forget this line, the program will 'hang'
     # on exit if running from IDLE.
     pygame.quit()
+    
+def process_events(player_sprite):
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            return True
+            
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                # handle left 
+                processing = "K_LEFT => DOWN"
+                
+            elif event.key == pygame.K_RIGHT:
+                # handle right 
+                processing = "K_RIGHT => DOWN"
+                
+            elif event.key == pygame.K_UP:
+                # handle up 
+                processing = "K_UP => DOWN"
+                
+            elif event.key == pygame.K_DOWN:
+                # handle down
+                processing = "K_DOWN => DOWN"
+                
+            elif event.key == pygame.K_SPACE:
+                processing = "K_SPACE => DOWN"
+                player_sprite.do_actionkey_down()
+                
+        elif event.type == pygame.KEYUP:
+            if event.key == pygame.K_LEFT:
+                # handle left 
+                processing = "K_LEFT => UP"
+            elif event.key == pygame.K_RIGHT:
+                # handle right 
+                processing = "K_RIGHT => UP"
+            elif event.key == pygame.K_UP:
+                # handle up 
+                processing = "K_UP => UP"
+            elif event.key == pygame.K_DOWN:
+                # handle down
+                processing = "K_DOWN => UP"
+                
+        return False
+
  
 if __name__ == "__main__":
     main()

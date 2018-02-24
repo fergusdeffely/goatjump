@@ -1,7 +1,7 @@
 import math
 
 PI = math.pi
-G = 9.8
+G = 0.98
 
 # Colours
 BLACK = (0, 0, 0)
