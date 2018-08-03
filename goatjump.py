@@ -47,7 +47,7 @@ def main():
         goat.update(level_1)
             
         # Drawing
-        screen.fill(WHITE)
+        screen.fill(BLACK)
 
         level_1.render(screen)
         goat.render(screen, level_1.view)

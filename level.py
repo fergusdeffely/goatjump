@@ -51,7 +51,7 @@ class Level():
             if goat.y > VERTICAL_SCROLL_CEILING:
                 self.view.y_offset = goat.y - VERTICAL_SCROLL_CEILING
                 
-        self.view.x_offset = goat.x - GOAT_X_OFFSET
+        self.view.x_offset = goat.x - GOAT_X_POSITION
         
     
     def render(self, screen):
