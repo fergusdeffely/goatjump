@@ -10,6 +10,7 @@ Pygame base template for opening a window, done with functions
  
 import pygame
 import random
+import level
 import sprites
 from constants import *
 
@@ -20,10 +21,10 @@ def main():
     pygame.init()
  
     # Set the width and height of the screen [width,height]
-    size = [700, 500]
+    size = [VIEW_WIDTH, VIEW_HEIGHT]
     screen = pygame.display.set_mode(size)
  
-    pygame.display.set_caption("My Game")
+    pygame.display.set_caption("GoatJump")
  
     # Loop until the user clicks the close button.
     done = False
@@ -33,35 +34,29 @@ def main():
  
     processing = "Nothing"
 
-    player_sprite = sprites.Indicator()
-    
-    # left, top, width, height
-    surfaces = [[50, 450, 600, 30]]
-
+    goat = sprites.Goat()
+    level_1 = level.Level()
    
     # -------- Main Program Loop -----------
     while not done:
         
         # Event Processing
-        done = process_events(player_sprite)
+        done = process_events(goat)
                 
         # Game Logic
-        player_sprite.update(surfaces)
+        goat.update(level_1)
             
         # Drawing
         screen.fill(WHITE)
 
-        player_sprite.render(screen)
-        
-        # render surfaces
-        for surface in surfaces:
-            pygame.draw.rect(screen, GREEN, surface)
+        level_1.render(screen)
+        goat.render(screen, level_1.view)
          
         # Go ahead and update the screen with what we've drawn.
         pygame.display.flip()
  
         # Limit to 60 frames per second
-        clock.tick(4)
+        clock.tick(FRAMES_PER_SECOND)
         
  
     # Close the window and quit.
@@ -69,7 +64,7 @@ def main():
     # on exit if running from IDLE.
     pygame.quit()
     
-def process_events(player_sprite):
+def process_events(goat):
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             return True
@@ -93,7 +88,7 @@ def process_events(player_sprite):
                 
             elif event.key == pygame.K_SPACE:
                 processing = "K_SPACE => DOWN"
-                player_sprite.do_actionkey_down()
+                goat.do_actionkey_down()
                 
         elif event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT:

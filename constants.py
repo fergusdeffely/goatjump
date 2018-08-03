@@ -1,7 +1,17 @@
 import math
 
 PI = math.pi
-G = 0.98
+FRAMES_PER_SECOND = 30
+G = 0.1
+#G = 50 / FRAMES_PER_SECOND
+
+# View and scrolling
+VIEW_WIDTH = 700
+VIEW_HEIGHT = 500
+VERTICAL_SCROLL_CEILING = 100
+VERTICAL_SCROLL_FLOOR = 300
+
+GOAT_X_OFFSET = 270
 
 # Colours
 BLACK = (0, 0, 0)
@@ -9,3 +19,4 @@ WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
+YELLOW = (0, 255, 255)
