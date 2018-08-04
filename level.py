@@ -17,6 +17,7 @@ class View():
     
     def vertical_scroll_zone_lower(self):
         return pygame.Rect(self.x_offset, self.y_offset + VERTICAL_SCROLL_FLOOR, VIEW_WIDTH, VIEW_HEIGHT - VERTICAL_SCROLL_FLOOR)
+
     
     def vertical_scroll_zone_higher(self):
         return pygame.Rect(self.x_offset, self.y_offset, VIEW_WIDTH, VERTICAL_SCROLL_CEILING)    
@@ -29,14 +30,14 @@ class Level():
         self.width = 3000
         self.height = 1000
         self.platforms = []
-        self.platforms.append(Platform(50,  150, 180, 30))
-        self.platforms.append(Platform(250, 300, 180, 30))
-        self.platforms.append(Platform(450, 450, 180, 30))
+        self.platforms.append(Platform(50,  150, 180, 30, "faster"))
+        self.platforms.append(Platform(250, 300, 180, 30, "faster"))
+        self.platforms.append(Platform(450, 450, 180, 30, "fast"))
         self.platforms.append(Platform(250, 600, 180, 30))
-        self.platforms.append(Platform(450, 750, 180, 30))
+        self.platforms.append(Platform(450, 750, 180, 30, "fast"))
         self.platforms.append(Platform(650, 680, 180, 30))
         self.platforms.append(Platform(850, 610, 180, 30))
-        self.platforms.append(Platform(970, 540, 100, 30))
+        self.platforms.append(Platform(970, 540, 100, 30, "faster"))
         self.platforms.append(Platform(1070, 470, 80, 20))
         
         self.view = View()
