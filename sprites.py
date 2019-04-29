@@ -32,47 +32,48 @@ class IndicatorMotion():
     def __init__(self, motion_type):
         self.motion_type = motion_type
         self.power_increment = 1
-        self.start_angle = 0
+        self.start_angle = 5
         self.swing = {}
         
-        if motion_type == "basic":
-            self.start_angle = 16
-            for n in range(0, 91, 2):
-                self.swing[(n, 1)] = self.swing[(n, -1)] = 2
-                
-            self.swing[(0, -1)] = 0
-            self.swing[(90, 1)] = 0
-            
-        elif motion_type == "fast":
-            self.power_increment = 1.5
+        if motion_type == "fast":
+            self.power_increment = 1.2
             self.start_angle = 15
-            for n in range(0, 91, 3):
-                self.swing[(n, 1)] = self.swing[(n, -1)] = 3
-                
-            self.swing[(0, -1)] = 0
-            self.swing[(90, 1)] = 0
             
         elif motion_type == "faster":
-            self.power_increment = 2
+            self.power_increment = 1.4
             self.start_angle = 16
-            for n in range(0, 91, 4):
-                self.swing[(n, 1)] = self.swing[(n, -1)] = 4
-                
-            self.swing[(0, -1)]  = 0
-            self.swing[(88, 1)]  = 2
-            self.swing[(90, -1)] = 2
-            self.swing[(90, 1)]  = 0
+    
+    
+    def get_step(self):
+        if self.motion_type == "basic":
+            step = 2
+        elif self.motion_type == "fast":
+            step = 3
+        elif self.motion_type == "faster":
+            step = 4
+        
+        return step
     
     
     def get_swing(self, degrees, turn):
-        return self.swing[(degrees, turn)]
+
+        step = self.get_step()
+        
+        if degrees > 0 and degrees < 90:
+            return step
+        elif degrees >= 90 and turn == UPSWING_TURN:
+            return 0
+        elif degrees >= 90 and turn == DOWNSWING_TURN:
+            return step
+        elif degrees <= 0:
+            return 0
     
     
     def trace(self):
         print ("turn = 1: ")
         message = ""
         for n in range(91):
-            if self.swing.__contains__((n, 1)):
+            if (n, 1) in self.swing:
                 message += str(self.swing[(n, 1)])
                 if n < 90: 
                     message += ", "
@@ -81,7 +82,7 @@ class IndicatorMotion():
         print ("turn = -1: ")
         message = ""
         for n in range(91):
-            if self.swing.__contains__((n, -1)):
+            if (n, -1) in self.swing:
                 message += str(self.swing[(n, -1)])
                 if n < 90:
                     message += ", "
@@ -91,34 +92,29 @@ class IndicatorMotion():
 
 class Goat():
     
-    def __init__(self):
+    def __init__(self, jumpstate = "pregame"):
         self.x = GOAT_X_POSITION
         self.y = VERTICAL_SCROLL_CEILING
         self.speed_x = 0
         self.speed_y = 0
-        self.turn = 1
+        self.turn = UPSWING_TURN
 
         # jumping
-        # jumpstates: aiming, powering, midair, deaded
-        self.jumpstate = "midair"
+        # jumpstates: pregame, aiming, powering, midair, deaded
+        self.jumpstate = jumpstate
         self.aiming_phase = "none"
         self.speed_accumulation_bonus = 0
         self.current_platform = None
         self.colour = GREEN
         
         self.radius = 20
-        
-        
+    
     def to_view_coords(self, view):
         return {"x":self.x - view.x_offset, "y":self.y - view.y_offset}
         
         
     def adjusted_speed(self, speed):
         return speed
-
-
-    def turn(self, angle):
-        return angle * self.turn
     
 
     def update(self, level):
@@ -126,21 +122,19 @@ class Goat():
             angular_motion = self.current_platform.indicator_motion.get_swing(self.angle, self.turn)
             
             if angular_motion == 0:
-                if self.turn == 1:
-                    self.turn = -1
+                if self.turn == UPSWING_TURN:
+                    self.turn = DOWNSWING_TURN
                 else:
                     self.jumpstate = "deaded"
             else:
                 self.angle += angular_motion * self.turn
+                if self.angle > 90:
+                    self.angle = 90
 
         elif self.jumpstate == "powering":
-            if self.radius < 30:
-                self.radius += 1 * self.current_platform.indicator_motion.power_increment
-            elif self.radius < 40:
-                self.radius += 2 * self.current_platform.indicator_motion.power_increment
-            elif self.radius < 82:
-                self.radius += 3 * self.current_platform.indicator_motion.power_increment
-                
+            if self.radius < 82:
+                self.radius += self.current_platform.indicator_motion.power_increment
+            
         elif self.jumpstate == "midair":            
             self.speed_y += G
 
@@ -152,7 +146,7 @@ class Goat():
                     self.radius = 20
                     self.angle = platform.indicator_motion.start_angle
                     self.colour = platform.colour
-                    self.turn = 1
+                    self.turn = UPSWING_TURN
                     self.jumpstate = "aiming"
                     self.current_platform = platform
                     #self.aiming_phase = "first_pass"
@@ -180,55 +174,65 @@ class Goat():
 
 
     def render_grounded(self, screen, view):
-        view_coords = self.to_view_coords(view)
-        pygame.draw.ellipse(screen, self.colour, [view_coords["x"] - 10, view_coords["y"] - 10, 20, 20], 0)
+        coords = self.to_view_coords(view)
+        pygame.draw.ellipse(screen, self.colour, [coords["x"] - 10, coords["y"] - 10, 20, 20], 0)
         
         
     def render_midair(self, screen, view):
-        view_coords = self.to_view_coords(view)
-        pygame.draw.ellipse(screen, self.colour, [view_coords["x"] - 10, view_coords["y"] - 10, 20, 20], 0)        
+        coords = self.to_view_coords(view)
+        pygame.draw.ellipse(screen, self.colour, [coords["x"] - 10, coords["y"] - 10, 20, 20], 0)        
 
 
     def render_power(self, screen, view):
-        view_coords = self.to_view_coords(view)
+        coords = self.to_view_coords(view)
         
-        pen = 5
-        if self.radius > 30:
-            pen = 4
-        elif self.radius > 40:
-            pen = 3
-        elif self.radius > 50:
-            pen = 2
-        elif self.radius > 65:
-            pen = 1
+        colour = pygame.Color(0, 255, 0, 50)
         
-        colour = BLUE
-        target_colour = YELLOW
-        if self.radius > DIRECTION_INDICATOR_LENGTH:
-            colour = RED
-            target_colour = WHITE
-
-        pygame.draw.ellipse(screen, target_colour, [view_coords["x"] - DIRECTION_INDICATOR_LENGTH, view_coords["y"] - DIRECTION_INDICATOR_LENGTH, DIRECTION_INDICATOR_LENGTH * 2, DIRECTION_INDICATOR_LENGTH * 2], 3)
-        pygame.draw.ellipse(screen, colour, [view_coords["x"] - self.radius, view_coords["y"] - self.radius, self.radius * 2, self.radius * 2], pen)
+        if self.radius >= DIRECTION_INDICATOR_LENGTH:
+            colour = pygame.Color(255, 0, 0, 50)
+        elif self.radius >= DIRECTION_INDICATOR_LENGTH - 10:
+            colour = pygame.Color(255, 255, 0, 50)
         
+        pygame.draw.ellipse(screen, colour, [coords["x"] - self.radius, coords["y"] - self.radius, self.radius * 2, self.radius * 2])
+        rad = self.radius - 10
+        pygame.draw.ellipse(screen, BLACK, [coords["x"] - rad, coords["y"] - rad, rad * 2, rad * 2])
+        
+        # Power limit
+        rad = DIRECTION_INDICATOR_LENGTH - 2
+        pygame.draw.ellipse(screen, WHITE, [coords["x"] - rad, coords["y"] - rad, rad * 2, rad * 2], 2)
+        rad = DIRECTION_INDICATOR_LENGTH + 2
+        pygame.draw.ellipse(screen, WHITE, [coords["x"] - rad, coords["y"] - rad, rad * 2, rad * 2], 2)        
+        
+        pygame.draw.ellipse(screen, self.colour, [coords["x"] - 10, coords["y"] - 10, 20, 20], 0)
 
     def render_direction(self, screen, view):
-        view_coords = self.to_view_coords(view)
+        coords = self.to_view_coords(view)
         
-        to_x = view_coords["x"] + DIRECTION_INDICATOR_LENGTH * math.cos(math.radians(self.angle))
-        to_y = view_coords["y"] - DIRECTION_INDICATOR_LENGTH * math.sin(math.radians(self.angle))
+        arrow_head_x = coords["x"] + (DIRECTION_INDICATOR_LENGTH - 3) * math.cos(math.radians(self.angle))
+        arrow_head_y = coords["y"] - (DIRECTION_INDICATOR_LENGTH - 3) * math.sin(math.radians(self.angle))
+        arrow_shaft_x = coords["x"] + (DIRECTION_INDICATOR_LENGTH - 8) * math.cos(math.radians(self.angle))
+        arrow_shaft_y = coords["y"] - (DIRECTION_INDICATOR_LENGTH - 8) * math.sin(math.radians(self.angle))       
+        arrow_head_left_x = coords["x"] + (DIRECTION_INDICATOR_LENGTH - 15) * math.cos(math.radians(self.angle + 10))
+        arrow_head_left_y = coords["y"] - (DIRECTION_INDICATOR_LENGTH - 15) * math.sin(math.radians(self.angle + 10))
+        arrow_head_right_x = coords["x"] + (DIRECTION_INDICATOR_LENGTH - 15) * math.cos(math.radians(self.angle - 10))
+        arrow_head_right_y = coords["y"] - (DIRECTION_INDICATOR_LENGTH - 15) * math.sin(math.radians(self.angle - 10)) 
         
-        pygame.draw.line(screen, WHITE, [view_coords["x"], view_coords["y"]], [to_x, to_y], 2)
+        pygame.draw.line(screen, WHITE, [coords["x"], coords["y"]], [arrow_shaft_x, arrow_shaft_y], 6)
+        pygame.draw.polygon(screen, WHITE, [[arrow_head_x, arrow_head_y], [arrow_head_left_x, arrow_head_left_y], [arrow_head_right_x, arrow_head_right_y]])
+        #pygame.draw.line(screen, WHITE, [to_x, to_y], [arrow_head_right_x, arrow_head_right_y], 2)
+        #pygame.draw.line(screen, WHITE, [to_x, to_y], [arrow_head_right_x, arrow_head_right_y], 2)        
+        
+        pygame.draw.ellipse(screen, self.colour, [coords["x"] - 10, coords["y"] - 10, 20, 20], 0)
 
 
     def render_deaded(self, screen, view):
-        view_coords = self.to_view_coords(view)
-        pygame.draw.ellipse(screen, WHITE, [view_coords["x"] - 10, view_coords["y"] - 10, 20, 20], 0)        
+        coords = self.to_view_coords(view)
+        pygame.draw.ellipse(screen, WHITE, [coords["x"] - 10, coords["y"] - 10, 20, 20], 0)        
     
     
     def render(self, screen, view):
         info = self.jumpstate + ": " + self.get_debug_info()
-
+            
         if self.jumpstate == "aiming":
             self.render_grounded(screen, view)
             self.render_direction(screen, view)
@@ -244,9 +248,9 @@ class Goat():
         elif self.jumpstate == "deaded":
             self.render_deaded(screen, view)
                 
-        font = pygame.font.SysFont('Calibri', 25, True, False)
+        font = pygame.font.SysFont('Calibri', 15, True, False)
         text = font.render(info, True, RED)
-        screen.blit(text, [200, 50])
+        screen.blit(text, [350, 10])
 
         
     def get_debug_info(self):
@@ -259,7 +263,7 @@ class Goat():
         
     def do_actionkey_down(self):
         if self.jumpstate == "aiming":
-            if self.turn == 1:
+            if self.turn == UPSWING_TURN:
                 self.speed_accumulation_bonus = 20
             else:
                 self.speed_accumulation_bonus = 0
@@ -267,7 +271,7 @@ class Goat():
             self.jumpstate = "powering"
             
         elif self.jumpstate == "powering":
-            if self.radius <= 50:
+            if self.radius <= DIRECTION_INDICATOR_LENGTH:
                 power = self.radius
             else:
                 power = 20

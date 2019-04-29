@@ -30,19 +30,59 @@ class Level():
         self.width = 3000
         self.height = 1000
         self.platforms = []
-        self.platforms.append(Platform(50,  150, 180, 30, "faster"))
-        self.platforms.append(Platform(250, 300, 180, 30, "faster"))
-        self.platforms.append(Platform(450, 450, 180, 30, "fast"))
-        self.platforms.append(Platform(250, 600, 180, 30))
-        self.platforms.append(Platform(450, 750, 180, 30, "fast"))
-        self.platforms.append(Platform(650, 680, 180, 30))
-        self.platforms.append(Platform(850, 610, 180, 30))
-        self.platforms.append(Platform(970, 540, 100, 30, "faster"))
-        self.platforms.append(Platform(1070, 470, 80, 20))
         
-        self.view = View()
-    
-    
+        
+        #practice level
+        self.platforms.append(Platform(20, 250, 2000, 30))
+        self.platforms.append(Platform(200, 150, 100, 30))
+        self.platforms.append(Platform(800, 150, 100, 30))
+        self.platforms.append(Platform(1200, 150, 100, 30))
+        self.platforms.append(Platform(1800, 150, 100, 30))
+        
+        #level 1
+        #self.platforms.append(Platform(20, 250, 150, 30))
+        #self.platforms.append(Platform(850,290, 300, 30))
+        #self.platforms.append(Platform(250,250, 300, 30))
+        #self.platforms.append(Platform(550,270, 300, 30))
+        
+        #level 2
+        #self.platforms.append(Platform(20, 250, 150, 30, "fast"))
+        #self.platforms.append(Platform(250,250, 300, 30, "fast"))
+        #self.platforms.append(Platform(550,270, 300, 30, "fast"))
+        #self.platforms.append(Platform(850,290, 300, 30, "fast"))
+
+        #level 3
+        #self.platforms.append(Platform(20, 250, 150, 30, "faster"))
+        #self.platforms.append(Platform(250,250, 300, 30, "faster"))
+        #self.platforms.append(Platform(550,270, 300, 30, "faster"))
+        #self.platforms.append(Platform(850,290, 300, 30, "faster"))
+        
+        #level 4
+        #self.platforms.append(Platform(20, 250, 150, 30))
+        #self.platforms.append(Platform(250,350, 150, 30, "fast"))
+        #self.platforms.append(Platform(470,350, 150, 30, "faster"))
+        #self.platforms.append(Platform(640,290, 200, 30))
+                                       
+        # Advanced level
+        #self.platforms.append(Platform(50,  150, 180, 30, "faster"))
+        #self.platforms.append(Platform(250, 300, 180, 30, "faster"))
+        #self.platforms.append(Platform(450, 450, 180, 30, "fast"))
+        #self.platforms.append(Platform(260, 600, 180, 30))
+        #self.platforms.append(Platform(450, 750, 180, 30, "fast"))
+        #self.platforms.append(Platform(650, 680, 180, 30))
+        #self.platforms.append(Platform(850, 610, 180, 30))
+        #self.platforms.append(Platform(970, 540, 100, 30, "faster"))
+        #self.platforms.append(Platform(1070, 470, 80, 20))
+        #self.platforms.append(Platform(1200, 570, 70, 20, "fast"))
+        #self.platforms.append(Platform(1320, 450, 50, 20, "fast"))
+        #self.platforms.append(Platform(1200, 570, 80, 20, "fast"))
+        #self.platforms.append(Platform(1400, 540, 70, 20, "fast"))
+        #self.platforms.append(Platform(1600, 510, 60, 20, "fast"))
+        #self.platforms.append(Platform(1800, 480, 60, 20, "fast"))
+        #self.platforms.append(Platform(2000, 450, 50, 20, "fast"))
+        
+        self.view = View()        
+        
     def update(self, goat):
         if self.view.vertical_scroll_zone_lower().collidepoint(goat.x, goat.y):
             if goat.y < self.height - (VIEW_HEIGHT - VERTICAL_SCROLL_FLOOR):
