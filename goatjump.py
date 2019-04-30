@@ -83,12 +83,14 @@ class Game():
         
     def update(self):
         self.goat.update(self.level)
+        
         if self.goat.jumpstate == 'deaded':
             self.lobby = True
             self.lobby_message = "You died :(  SPACEBAR to try again"
     
+        self.level.update()
     
-    def render(self, screen):
+    def draw(self, screen):
          
         screen.fill(BLACK)
 
@@ -153,7 +155,7 @@ def main():
         game.update()
             
         # Drawing        
-        game.render(screen)
+        game.draw(screen)
          
         # Go ahead and update the screen with what we've drawn.
         pygame.display.flip()

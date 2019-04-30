@@ -4,6 +4,11 @@ import random
 from constants import *
 from sprites import *
 
+#-------------------------------------------------
+#
+#
+
+
 class View():
     
     def __init__(self):
@@ -21,7 +26,16 @@ class View():
     
     def vertical_scroll_zone_higher(self):
         return pygame.Rect(self.x_offset, self.y_offset, VIEW_WIDTH, VERTICAL_SCROLL_CEILING)    
-    
+
+
+#
+#
+#-------------------------------------------------
+
+
+#-------------------------------------------------
+#
+#
 
 
 class Level():
@@ -30,7 +44,7 @@ class Level():
         self.width = 3000
         self.height = 1000
         self.platforms = []
-        
+        self.snowflake_group = pygame.sprite.Group()
         
         #practice level
         self.platforms.append(Platform(20, 250, 2000, 30))
@@ -38,6 +52,16 @@ class Level():
         self.platforms.append(Platform(800, 150, 100, 30))
         self.platforms.append(Platform(1200, 150, 100, 30))
         self.platforms.append(Platform(1800, 150, 100, 30))
+        
+        self.snowflake_group.add(Snowflake(0, 2, 200, 80))
+        self.snowflake_group.add(Snowflake(2, 2, 260, 70))
+        self.snowflake_group.add(Snowflake(5, 2, 320, 60))
+        self.snowflake_group.add(Snowflake(7, 2, 380, 70))
+        self.snowflake_group.add(Snowflake(1, 2, 440, 80))
+        self.snowflake_group.add(Snowflake(3, 2, 500, 90))
+        self.snowflake_group.add(Snowflake(4, 2, 560, 100))
+        self.snowflake_group.add(Snowflake(6, 2, 620, 110))
+        self.snowflake_group.add(Snowflake(0, 2, 680, 120))
         
         #level 1
         #self.platforms.append(Platform(20, 250, 150, 30))
@@ -83,7 +107,9 @@ class Level():
         
         self.view = View()        
         
-    def update(self, goat):
+        
+    def scroll(self, goat):
+        
         if self.view.vertical_scroll_zone_lower().collidepoint(goat.x, goat.y):
             if goat.y < self.height - (VIEW_HEIGHT - VERTICAL_SCROLL_FLOOR):
                 self.view.y_offset = goat.y - VERTICAL_SCROLL_FLOOR
@@ -95,9 +121,23 @@ class Level():
         self.view.x_offset = goat.x - GOAT_X_POSITION
         
     
+    def update(self):
+        for snowflake in self.snowflake_group:
+            snowflake.refresh_view_coords(self.view)
+        self.snowflake_group.update()
+        
+    
     def render(self, screen):
 
         # platforms
         for platform in self.platforms:            
             if self.view.rect().colliderect(platform):
                 platform.render(screen, self.view)
+                
+        
+        self.snowflake_group.draw(screen)
+
+
+#
+#
+#-------------------------------------------------

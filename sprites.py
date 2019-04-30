@@ -1,41 +1,15 @@
 import pygame
 import math
 import random
+
+import constants
 from level import *
-from constants import *
+from sprite_helpers import *
 
 
-class SpriteFrame():
-    
-    def __init__(self, x, y, width, height):
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-
-        
-
-class SpriteSheet():
-    
-    def __init__(self, image_filename, sprite_map):
-        self.sprite_sheet = pygame.image.load(image_filename).convert()
-        self.sprite_map = sprite_map
-                
-    def get_frame(self, name):
-        image = None
-        
-        if name in self.sprite_map:
-            frame_details = self.sprite_map[name]
-            
-            #Create a new blank image
-            image = pygame.Surface([frame_details.width, frame_details.height]).convert()
-            
-            image.blit(self.sprite_sheet, (0, 0), (frame_details.x, frame_details.y, frame_details.width, frame_details.height))
-            
-            image.set_colorkey(BLACK)
-            
-        return image
-
+#-------------------------------------------------
+#
+#
 
 
 class Platform():
@@ -43,11 +17,11 @@ class Platform():
     def __init__(self, left, top, width, height, motion_type = "basic"):
         self.rect = pygame.Rect(left, top, width, height)
         self.indicator_motion = IndicatorMotion(motion_type)
-        self.colour = GREEN
+        self.colour = constants.GREEN
         if motion_type == "fast":
-            self.colour = PINK
+            self.colour = constants.PINK
         elif motion_type == "faster":
-            self.colour = RED
+            self.colour = constants.RED
     
     
     def to_view_coords(self, view):
@@ -56,8 +30,76 @@ class Platform():
 
     def render(self, screen, view):
         pygame.draw.rect(screen, self.colour, self.to_view_coords(view) )
+
+
+#
+#
+#-------------------------------------------------
+
+
+#-------------------------------------------------
+#
+#
+
+
+class Snowflake(pygame.sprite.Sprite):
+    
+    def __init__(self, phase, step, x, y):
+        super().__init__()
         
+        self.sprite_sheet = SpriteSheet("resources/snowflake_sprite_sheet.png", {"PHASE_0": SpriteFrame(0, 0, 40, 35),
+                                                                                 "PHASE_1": SpriteFrame(40, 0, 40, 35),
+                                                                                 "PHASE_2": SpriteFrame(80, 0, 40, 35),
+                                                                                 "PHASE_3": SpriteFrame(120, 0, 40, 35),
+                                                                                 "PHASE_4": SpriteFrame(160, 0, 40, 35),
+                                                                                 "PHASE_5": SpriteFrame(200, 0, 40, 35),
+                                                                                 "PHASE_6": SpriteFrame(240, 0, 40, 35),
+                                                                                 "PHASE_7": SpriteFrame(280, 0, 40, 35)})
+        self.growth = 1
+        self.phase = phase
+        # snowflake moves to next phase every _step_ frames
+        self.step = step
+        self.steps = 0
+        self.image = self.sprite_sheet.get_frame("PHASE_{:d}".format(self.phase))
+        self.x = x
+        self.y = y
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
         
+    
+    def next_phase(self):
+        if self.phase == 0 and self.growth == -1:
+            self.growth = 1
+        elif self.phase == 7 and self.growth == 1:
+            self.growth = -1
+        else:
+            self.phase = self.phase + self.growth
+                
+    
+    def refresh_view_coords(self, view):
+        self.rect.x = self.x - view.x_offset
+        self.rect.y = self.y - view.y_offset
+        
+    
+    def update(self):        
+        if self.steps + 1 >= self.step:
+            self.next_phase()
+            self.image = self.sprite_sheet.get_frame("PHASE_{:d}".format(self.phase))
+            self.steps = 0
+        else:
+            self.steps = self.steps + 1
+            
+        
+
+#
+#
+#-------------------------------------------------
+
+
+#-------------------------------------------------
+#
+
         
 class IndicatorMotion():
     
@@ -93,9 +135,9 @@ class IndicatorMotion():
         
         if degrees > 0 and degrees < 90:
             return step
-        elif degrees >= 90 and turn == UPSWING_TURN:
+        elif degrees >= 90 and turn == constants.UPSWING_TURN:
             return 0
-        elif degrees >= 90 and turn == DOWNSWING_TURN:
+        elif degrees >= 90 and turn == constants.DOWNSWING_TURN:
             return step
         elif degrees <= 0:
             return 0
@@ -118,8 +160,15 @@ class IndicatorMotion():
                 message += str(self.swing[(n, -1)])
                 if n < 90:
                     message += ", "
-        print(message)
-        
+        print(message)        
+
+
+#
+#-------------------------------------------------
+
+
+#-------------------------------------------------
+#
         
 
 class Goat(pygame.sprite.Sprite):
@@ -129,30 +178,29 @@ class Goat(pygame.sprite.Sprite):
         # init Sprite
         super().__init__()
         
-        self.x = GOAT_X_POSITION
-        self.y = VERTICAL_SCROLL_CEILING        
+        self.x = constants.GOAT_X_POSITION
+        self.y = constants.VERTICAL_SCROLL_CEILING        
         self.speed_x = 0
         self.speed_y = 0
-        self.turn = UPSWING_TURN
+        self.turn = constants.UPSWING_TURN
 
         # jumping
         # jumpstates: pregame, aiming, powering, midair, deaded
         self.jumpstate = jumpstate
-        self.aiming_phase = "none"
         self.speed_accumulation_bonus = 0
         self.current_platform = None
-        self.colour = GREEN
+        self.colour = constants.GREEN
         
         self.radius = 20
         
-        self.sprite_sheet = SpriteSheet("images/goat_sprite_sheet.png", {"STANDING": SpriteFrame(0, 0, 25, 25), 
-                                                                         "UP_JUMP": SpriteFrame(25, 0, 25, 25),
-                                                                         "DOWN_JUMP": SpriteFrame(50, 0, 25, 25)})
+        self.sprite_sheet = SpriteSheet("resources/goat_sprite_sheet.png", {"STANDING": SpriteFrame(0, 0, 25, 25), 
+                                                                            "UP_JUMP": SpriteFrame(25, 0, 25, 25),
+                                                                            "DOWN_JUMP": SpriteFrame(50, 0, 25, 25)})
         
         self.image = self.sprite_sheet.get_frame("STANDING")
         self.rect = self.image.get_rect()
-        self.rect.x = GOAT_X_POSITION
-        self.rect.y = VERTICAL_SCROLL_CEILING
+        self.rect.x = self.x
+        self.rect.y = self.y
         
     
     def refresh_view_coords(self, view):
@@ -169,8 +217,8 @@ class Goat(pygame.sprite.Sprite):
             angular_motion = self.current_platform.indicator_motion.get_swing(self.angle, self.turn)
             
             if angular_motion == 0:
-                if self.turn == UPSWING_TURN:
-                    self.turn = DOWNSWING_TURN
+                if self.turn == constants.UPSWING_TURN:
+                    self.turn = constants.DOWNSWING_TURN
                 else:
                     self.jumpstate = "deaded"
             else:
@@ -184,6 +232,10 @@ class Goat(pygame.sprite.Sprite):
             
         elif self.jumpstate == "midair":
             self.speed_y += G
+            if self.speed_y > 0:
+                self.image = self.sprite_sheet.get_frame("DOWN_JUMP")
+            else:
+                self.image = self.sprite_sheet.get_frame("UP_JUMP")
 
             for platform in level.platforms:
                 if self.test_for_landing(platform):
@@ -193,11 +245,10 @@ class Goat(pygame.sprite.Sprite):
                     self.radius = 20
                     self.angle = platform.indicator_motion.start_angle
                     self.colour = platform.colour
-                    self.turn = UPSWING_TURN
+                    self.turn = constants.UPSWING_TURN
                     self.jumpstate = "aiming"
                     self.current_platform = platform
                     self.image = self.sprite_sheet.get_frame("STANDING")
-                    #self.aiming_phase = "first_pass"
                     break
                 
             self.x += self.speed_x
@@ -206,7 +257,7 @@ class Goat(pygame.sprite.Sprite):
         if self.y > level.height:
             self.jumpstate = "deaded"
         
-        level.update(self)
+        level.scroll(self)
         
         self.refresh_view_coords(level.view)
         
@@ -226,36 +277,36 @@ class Goat(pygame.sprite.Sprite):
     def render_power(self, screen, view):
         colour = pygame.Color(0, 255, 0, 50)
         
-        if self.radius >= DIRECTION_INDICATOR_LENGTH:
+        if self.radius >= constants.DIRECTION_INDICATOR_LENGTH:
             colour = pygame.Color(255, 0, 0, 50)
-        elif self.radius >= DIRECTION_INDICATOR_LENGTH - 10:
+        elif self.radius >= constants.DIRECTION_INDICATOR_LENGTH - 10:
             colour = pygame.Color(255, 255, 0, 50)
         
         pygame.draw.ellipse(screen, colour, [self.rect.x - self.radius, self.rect.y - self.radius, self.radius * 2, self.radius * 2])
         rad = self.radius - 10
-        pygame.draw.ellipse(screen, BLACK, [self.rect.x - rad, self.rect.y - rad, rad * 2, rad * 2])
+        pygame.draw.ellipse(screen, constants.BLACK, [self.rect.x - rad, self.rect.y - rad, rad * 2, rad * 2])
         
         # Power limit
-        rad = DIRECTION_INDICATOR_LENGTH - 2
-        pygame.draw.ellipse(screen, WHITE, [self.rect.x - rad, self.rect.y - rad, rad * 2, rad * 2], 2)
-        rad = DIRECTION_INDICATOR_LENGTH + 2
-        pygame.draw.ellipse(screen, WHITE, [self.rect.x - rad, self.rect.y - rad, rad * 2, rad * 2], 2)
+        rad = constants.DIRECTION_INDICATOR_LENGTH - 2
+        pygame.draw.ellipse(screen, constants.WHITE, [self.rect.x - rad, self.rect.y - rad, rad * 2, rad * 2], 2)
+        rad = constants.DIRECTION_INDICATOR_LENGTH + 2
+        pygame.draw.ellipse(screen, constants.WHITE, [self.rect.x - rad, self.rect.y - rad, rad * 2, rad * 2], 2)
         
         pygame.draw.ellipse(screen, self.colour, [self.rect.x - 10, self.rect.y - 10, 20, 20], 0)
         
 
     def render_direction(self, screen, view):        
-        arrow_head_x = self.rect.x + (DIRECTION_INDICATOR_LENGTH - 3) * math.cos(math.radians(self.angle))
-        arrow_head_y = self.rect.y - (DIRECTION_INDICATOR_LENGTH - 3) * math.sin(math.radians(self.angle))
-        arrow_shaft_x = self.rect.x + (DIRECTION_INDICATOR_LENGTH - 8) * math.cos(math.radians(self.angle))
-        arrow_shaft_y = self.rect.y - (DIRECTION_INDICATOR_LENGTH - 8) * math.sin(math.radians(self.angle))
-        arrow_head_left_x = self.rect.x + (DIRECTION_INDICATOR_LENGTH - 15) * math.cos(math.radians(self.angle + 10))
-        arrow_head_left_y = self.rect.y - (DIRECTION_INDICATOR_LENGTH - 15) * math.sin(math.radians(self.angle + 10))
-        arrow_head_right_x = self.rect.x + (DIRECTION_INDICATOR_LENGTH - 15) * math.cos(math.radians(self.angle - 10))
-        arrow_head_right_y = self.rect.y - (DIRECTION_INDICATOR_LENGTH - 15) * math.sin(math.radians(self.angle - 10)) 
+        arrow_head_x = self.rect.x + (constants.DIRECTION_INDICATOR_LENGTH - 3) * math.cos(math.radians(self.angle))
+        arrow_head_y = self.rect.y - (constants.DIRECTION_INDICATOR_LENGTH - 3) * math.sin(math.radians(self.angle))
+        arrow_shaft_x = self.rect.x + (constants.DIRECTION_INDICATOR_LENGTH - 8) * math.cos(math.radians(self.angle))
+        arrow_shaft_y = self.rect.y - (constants.DIRECTION_INDICATOR_LENGTH - 8) * math.sin(math.radians(self.angle))
+        arrow_head_left_x = self.rect.x + (constants.DIRECTION_INDICATOR_LENGTH - 15) * math.cos(math.radians(self.angle + 10))
+        arrow_head_left_y = self.rect.y - (constants.DIRECTION_INDICATOR_LENGTH - 15) * math.sin(math.radians(self.angle + 10))
+        arrow_head_right_x = self.rect.x + (constants.DIRECTION_INDICATOR_LENGTH - 15) * math.cos(math.radians(self.angle - 10))
+        arrow_head_right_y = self.rect.y - (constants.DIRECTION_INDICATOR_LENGTH - 15) * math.sin(math.radians(self.angle - 10)) 
         
-        pygame.draw.line(screen, WHITE, [self.rect.x, self.rect.y], [arrow_shaft_x, arrow_shaft_y], 6)
-        pygame.draw.polygon(screen, WHITE, [[arrow_head_x, arrow_head_y], [arrow_head_left_x, arrow_head_left_y], [arrow_head_right_x, arrow_head_right_y]])
+        pygame.draw.line(screen, constants.WHITE, [self.rect.x, self.rect.y], [arrow_shaft_x, arrow_shaft_y], 6)
+        pygame.draw.polygon(screen, constants.WHITE, [[arrow_head_x, arrow_head_y], [arrow_head_left_x, arrow_head_left_y], [arrow_head_right_x, arrow_head_right_y]])
         
         pygame.draw.ellipse(screen, self.colour, [self.rect.x - 10, self.rect.y - 10, 20, 20], 0)
 
@@ -278,7 +329,7 @@ class Goat(pygame.sprite.Sprite):
             # TODO: change frame 
                 
         font = pygame.font.SysFont('Calibri', 15, True, False)
-        text = font.render(info, True, RED)
+        text = font.render(info, True, constants.RED)
         screen.blit(text, [350, 10])
 
         
@@ -292,7 +343,7 @@ class Goat(pygame.sprite.Sprite):
         
     def do_actionkey_down(self):
         if self.jumpstate == "aiming":
-            if self.turn == UPSWING_TURN:
+            if self.turn == constants.UPSWING_TURN:
                 self.speed_accumulation_bonus = 20
             else:
                 self.speed_accumulation_bonus = 0
@@ -300,7 +351,7 @@ class Goat(pygame.sprite.Sprite):
             self.jumpstate = "powering"
             
         elif self.jumpstate == "powering":
-            if self.radius <= DIRECTION_INDICATOR_LENGTH:
+            if self.radius <= constants.DIRECTION_INDICATOR_LENGTH:
                 power = self.radius
             else:
                 power = 20
