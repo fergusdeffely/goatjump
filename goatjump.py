@@ -20,10 +20,8 @@ class Game():
     def __init__(self):
         self.lobby = True
         self.lobby_message = "Get Ready! SPACEBAR to start..."
-        self.goat = sprites.Goat("pregame") 
-        self.goat_group = pygame.sprite.Group()
-        self.goat_group.add(self.goat)
-        self.level = level.Level()
+        self.goat = sprites.Goat("pregame")
+        self.level = level.Level(self.goat)
     
     
     def process_events(self):
@@ -54,9 +52,7 @@ class Game():
                         if self.goat.jumpstate == "deaded":
                             # New goat and level
                             self.goat = sprites.Goat("midair")
-                            self.goat_group = pygame.sprite.Group()
-                            self.goat_group.add(self.goat)
-                            self.level = level.Level()
+                            self.level = level.Level(self.goat)
                         elif self.goat.jumpstate == "pregame":
                             self.goat.jumpstate = "midair"
                             
@@ -88,17 +84,15 @@ class Game():
             self.lobby = True
             self.lobby_message = "You died :(  SPACEBAR to try again"
     
+        self.level.scroll(self.goat.x, self.goat.y)
         self.level.update()
     
     def draw(self, screen):
          
         screen.fill(BLACK)
 
-        self.level.render(screen)
-        self.goat_group.draw(screen)
-        self.goat.render(screen, self.level.view)
-        
-        #self.goat.render(screen, self.level.view)
+        self.level.draw(screen)
+        self.goat.draw(screen, self.level.view)
         
         if self.lobby == True:
             message_box(screen, self.lobby_message)

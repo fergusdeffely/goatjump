@@ -78,8 +78,7 @@ class Snowflake(pygame.sprite.Sprite):
                 
     
     def refresh_view_coords(self, view):
-        self.rect.x = self.x - view.x_offset
-        self.rect.y = self.y - view.y_offset
+        (self.rect.x, self.rect.y) = view.get_coords(self.x, self.y)
         
     
     def update(self):        
@@ -193,9 +192,9 @@ class Goat(pygame.sprite.Sprite):
         
         self.radius = 20
         
-        self.sprite_sheet = SpriteSheet("resources/goat_sprite_sheet.png", {"STANDING": SpriteFrame(0, 0, 25, 25), 
-                                                                            "UP_JUMP": SpriteFrame(25, 0, 25, 25),
-                                                                            "DOWN_JUMP": SpriteFrame(50, 0, 25, 25)})
+        self.sprite_sheet = SpriteSheet("resources/goat_sprite_sheet.png", {"STANDING": SpriteFrame(0, 0, GOAT_SPRITE_WIDTH, GOAT_SPRITE_HEIGHT), 
+                                                                            "UP_JUMP": SpriteFrame(25, 0, GOAT_SPRITE_WIDTH, GOAT_SPRITE_HEIGHT),
+                                                                            "DOWN_JUMP": SpriteFrame(50, 0, GOAT_SPRITE_WIDTH, GOAT_SPRITE_HEIGHT)})
         
         self.image = self.sprite_sheet.get_frame("STANDING")
         self.rect = self.image.get_rect()
@@ -252,18 +251,18 @@ class Goat(pygame.sprite.Sprite):
                     break
                 
             self.x += self.speed_x
-            self.y += self.speed_y            
+            self.y += self.speed_y     
         
         if self.y > level.height:
             self.jumpstate = "deaded"
-        
-        level.scroll(self)
         
         self.refresh_view_coords(level.view)
         
         
     def test_for_landing(self, platform):
         newpos_x = self.x + self.adjusted_speed(self.speed_x)
+        # use middle of sprite base, rather than left
+        newpos_x = newpos_x + self.rect.height / 2
         newpos_y = self.y + self.adjusted_speed(self.speed_y)
 
         if self.y + self.rect.height < platform.rect.top and newpos_y + self.rect.height >= platform.rect.top:
@@ -311,9 +310,11 @@ class Goat(pygame.sprite.Sprite):
         pygame.draw.ellipse(screen, self.colour, [self.rect.x - 10, self.rect.y - 10, 20, 20], 0)
 
     
-    def render(self, screen, view):
+    def draw(self, screen, view):
         info = self.jumpstate + ": " + self.get_debug_info()
                 
+        screen.blit(self.image, [self.rect.x, self.rect.y])
+        
         if self.jumpstate == "aiming":
             # TODO: change frame 
             self.render_direction(screen, view)
@@ -334,7 +335,7 @@ class Goat(pygame.sprite.Sprite):
 
         
     def get_debug_info(self):
-        return "({:.2f}, {:.2f}) @{}: jumpstate {}".format(self.x, self.y, self.radius, self.jumpstate)
+        return "({:.2f}, {:.2f}) - jumpstate: {}".format(self.x, self.y, self.jumpstate)
 
 
     def get_speed_accumulation_bonus(self):

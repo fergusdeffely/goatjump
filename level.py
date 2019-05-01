@@ -25,7 +25,11 @@ class View():
 
     
     def vertical_scroll_zone_higher(self):
-        return pygame.Rect(self.x_offset, self.y_offset, VIEW_WIDTH, VERTICAL_SCROLL_CEILING)    
+        return pygame.Rect(self.x_offset, self.y_offset, VIEW_WIDTH, VERTICAL_SCROLL_CEILING)
+    
+    
+    def get_coords(self, x, y):
+        return (x - self.x_offset, y - self.y_offset)
 
 
 #
@@ -40,28 +44,32 @@ class View():
 
 class Level():
     
-    def __init__(self):
+    def __init__(self, goat):
         self.width = 3000
         self.height = 1000
+        self.goat = goat
         self.platforms = []
         self.snowflake_group = pygame.sprite.Group()
         
         #practice level
-        self.platforms.append(Platform(20, 250, 2000, 30))
+        self.platforms.append(Platform(20, 250, 500, 30))
         self.platforms.append(Platform(200, 150, 100, 30))
-        self.platforms.append(Platform(800, 150, 100, 30))
-        self.platforms.append(Platform(1200, 150, 100, 30))
-        self.platforms.append(Platform(1800, 150, 100, 30))
+        self.platforms.append(Platform(450, 400, 500, 30))        
+        self.platforms.append(Platform(800, 300, 100, 30))
+        self.platforms.append(Platform(900, 550, 500, 30))
+        self.platforms.append(Platform(1200, 450, 100, 30))
+        self.platforms.append(Platform(1350, 700, 500, 30))
+        self.platforms.append(Platform(1800, 600, 100, 30))
         
-        self.snowflake_group.add(Snowflake(0, 2, 200, 80))
-        self.snowflake_group.add(Snowflake(2, 2, 260, 70))
-        self.snowflake_group.add(Snowflake(5, 2, 320, 60))
-        self.snowflake_group.add(Snowflake(7, 2, 380, 70))
-        self.snowflake_group.add(Snowflake(1, 2, 440, 80))
-        self.snowflake_group.add(Snowflake(3, 2, 500, 90))
-        self.snowflake_group.add(Snowflake(4, 2, 560, 100))
-        self.snowflake_group.add(Snowflake(6, 2, 620, 110))
-        self.snowflake_group.add(Snowflake(0, 2, 680, 120))
+        self.snowflake_group.add(Snowflake(0, 5, 200, 80))
+        self.snowflake_group.add(Snowflake(2, 5, 260, 70))
+        self.snowflake_group.add(Snowflake(5, 5, 320, 60))
+        self.snowflake_group.add(Snowflake(7, 5, 380, 70))
+        self.snowflake_group.add(Snowflake(1, 5, 440, 80))
+        self.snowflake_group.add(Snowflake(3, 5, 500, 90))
+        self.snowflake_group.add(Snowflake(4, 5, 560, 100))
+        self.snowflake_group.add(Snowflake(6, 5, 620, 110))
+        self.snowflake_group.add(Snowflake(0, 5, 680, 120))
         
         #level 1
         #self.platforms.append(Platform(20, 250, 150, 30))
@@ -108,17 +116,16 @@ class Level():
         self.view = View()        
         
         
-    def scroll(self, goat):
+    def scroll(self, x, y):
         
-        if self.view.vertical_scroll_zone_lower().collidepoint(goat.x, goat.y):
-            if goat.y < self.height - (VIEW_HEIGHT - VERTICAL_SCROLL_FLOOR):
-                self.view.y_offset = goat.y - VERTICAL_SCROLL_FLOOR
-            
-        if self.view.vertical_scroll_zone_higher().collidepoint(goat.x, goat.y):
-            if goat.y > VERTICAL_SCROLL_CEILING:
-                self.view.y_offset = goat.y - VERTICAL_SCROLL_CEILING
+        if self.view.vertical_scroll_zone_lower().collidepoint(x, y):
+            if y < self.height - (VIEW_HEIGHT - VERTICAL_SCROLL_FLOOR):
+                self.view.y_offset = y - VERTICAL_SCROLL_FLOOR
+        elif self.view.vertical_scroll_zone_higher().collidepoint(x, y):
+            if y > VERTICAL_SCROLL_CEILING:
+                self.view.y_offset = y - VERTICAL_SCROLL_CEILING
                 
-        self.view.x_offset = goat.x - GOAT_X_POSITION
+        self.view.x_offset = x - GOAT_X_POSITION
         
     
     def update(self):
@@ -127,7 +134,7 @@ class Level():
         self.snowflake_group.update()
         
     
-    def render(self, screen):
+    def draw(self, screen):
 
         # platforms
         for platform in self.platforms:            
